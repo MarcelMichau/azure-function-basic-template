@@ -14,7 +14,7 @@ module resourceGroup 'br:acrmarcelmichau.azurecr.io/bicep/modules/resource-group
   }
 }
 
-resource accessLevelsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
+resource appResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
   name: resourceGroup.name
 }
 
@@ -24,7 +24,7 @@ module storageAccount 'br:acrmarcelmichau.azurecr.io/bicep/modules/storage-accou
     storageAccountName: 'st${appShortName}'
     location: location
   }
-  scope: accessLevelsResourceGroup
+  scope: appResourceGroup
 }
 
 module appServicePlan 'br:acrmarcelmichau.azurecr.io/bicep/modules/app-service-plan:v0.1' = {
@@ -38,7 +38,7 @@ module appServicePlan 'br:acrmarcelmichau.azurecr.io/bicep/modules/app-service-p
       capacity: 1
     }
   }
-  scope: accessLevelsResourceGroup
+  scope: appResourceGroup
 }
 
 module functionApp 'br:acrmarcelmichau.azurecr.io/bicep/modules/function-app:v0.1' = {
@@ -50,5 +50,5 @@ module functionApp 'br:acrmarcelmichau.azurecr.io/bicep/modules/function-app:v0.
     storageAccountName: storageAccount.outputs.name
     linuxFxVersion: 'DOTNETCORE|6.0'
   }
-  scope: accessLevelsResourceGroup
+  scope: appResourceGroup
 }

@@ -32,8 +32,16 @@ stages:
               azureSubscription: $(azureSubscription)
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az deployment sub create -f .\infra\api\main.bicep -l $(location) --parameters appName=$(appName) appShortName=$(appShortName)
-            displayName: 'Install Bicep CLI'
+                az acr login -n $(containerRegistry)
+            displayName: 'Login to ACR'
+
+          - task: AzureCLI@1
+            inputs:
+              azureSubscription: $(azureSubscription)
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment sub create -f infra/api/main.bicep -l $(location) --parameters appName=$(appName) appShortName=$(appShortName)
+            displayName: 'Deploy Infrastructure'
 
           - task: DotNetCoreCLI@2
             displayName: 'Restore project dependencies'

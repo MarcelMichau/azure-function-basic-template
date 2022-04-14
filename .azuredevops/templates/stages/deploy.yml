@@ -35,32 +35,33 @@ stages:
                 - checkout: self
 
                 - download: current
+                  displayName: 'Download Artifact - api'
                   artifact: api
 
                 - task: AzureCLI@1
+                  displayName: 'Install Bicep CLI'
                   inputs:
                     azureSubscription: $(serviceConnection)
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       az bicep install
-                    displayName: 'Install Bicep CLI'
 
                 - task: AzureCLI@1
+                  displayName: 'Login to ACR'
                   inputs:
                     azureSubscription: $(serviceConnection)
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       az acr login -n $(containerRegistry)
-                    displayName: 'Login to ACR'
 
                 - ${{ each value in parameters.infra }}:
                     - task: AzureCLI@1
+                      displayName: 'Deploy Infrastructure'
                       inputs:
                         azureSubscription: $(serviceConnection)
                         scriptLocation: 'inlineScript'
                         inlineScript: |
                           az deployment sub create -f infra/${{ value.path }}/main.bicep -l $(location) --parameters appName=$(appName) appShortName=$(appShortName)
-                        displayName: 'Deploy Infrastructure'
 
                 - task: AzureFunctionApp@1
                   displayName: 'Deploy Azure Function'

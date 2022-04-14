@@ -16,6 +16,8 @@ variables:
 
 stages:
   - template: templates/stages/build.yml@Self
+    parameters:
+      stage: Build
 
   - template: templates/stages/deploy.yml@Self
     parameters:

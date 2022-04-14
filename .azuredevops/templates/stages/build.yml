@@ -1,5 +1,18 @@
+parameters:
+  - name: stage
+    type: string
+    default: Deploy
+  - name: dependsOn
+    type: object
+    default: []
+  - name: condition
+    type: string
+    default: and(succeeded(), true)
+
 stages:
-  - stage: Build
+  - stage: ${{parameters.stage}}
+    dependsOn: ${{parameters.dependsOn}}
+    condition: ${{parameters.condition}}
     displayName: Build
     pool:
       vmImage: 'ubuntu-latest'
@@ -34,6 +47,6 @@ stages:
               arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(artifactName)'
               zipAfterPublish: true
 
-          - publish: '$(Build.ArtifactStagingDirectory)'
+          - publish: '$(Build.ArtifactStagingDirectory)/$(artifactName)'
             displayName: 'Publish Artifact - $(artifactName)'
             artifact: $(artifactName)

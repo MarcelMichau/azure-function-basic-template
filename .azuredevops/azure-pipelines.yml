@@ -15,9 +15,9 @@ variables:
   serviceConnection: PersonalSubscriptionServiceConnection
 
 stages:
-  - template: ../templates/stages/build.yml@Self
+  - template: templates/stages/build.yml@Self
 
-  - template: ../templates/stages/deploy.yml@Self
+  - template: templates/stages/deploy.yml@Self
     parameters:
       stage: Deploy_dev
       environment: dev

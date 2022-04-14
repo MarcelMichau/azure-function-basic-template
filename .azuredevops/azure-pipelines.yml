@@ -19,7 +19,7 @@ stages:
       - job: BuildDeploy
         displayName: Build + Deploy
         pool:
-          vmImage: ubuntu-latest
+          vmImage: windows-latest
 
         steps:
           - task: AzureCLI@1

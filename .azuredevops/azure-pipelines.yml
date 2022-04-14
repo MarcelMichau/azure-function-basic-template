@@ -42,13 +42,8 @@ stages:
             inputs:
               azureSubscription: $(azureSubscription)
               scriptLocation: 'inlineScript'
-              inlineScript: >-
-                az deployment sub create 
-                  -f infra/api/main.bicep 
-                  -l $(location) 
-                  --parameters 
-                  appName=$(appName) 
-                  appShortName=$(appShortName)
+              inlineScript: |
+                az deployment sub create -f infra/api/main.bicep -l $(location) --parameters appName=$(appName) appShortName=$(appShortName)
             displayName: 'Deploy Infrastructure'
 
           - task: DotNetCoreCLI@2

@@ -20,6 +20,8 @@ stages:
   - template: templates/stages/deploy.yml@Self
     parameters:
       stage: Deploy_dev
+      dependsOn:
+        - Build
       environment: dev
       serviceConnection: ${{ variables.serviceConnection }}
       infra: ${{ parameters.deploy }}

@@ -1,0 +1,71 @@
+parameters:
+- name: stage
+  type: string
+  default: Deploy
+- name: dependsOn
+  type: object
+  default: []
+- name: condition
+  type: string
+  default: and(succeeded(), true)
+- name: serviceConnection
+  type: string
+- name: environment
+  type: string
+- name: infra
+  type: object
+
+stages:
+- stage: ${{parameters.stage}}
+  dependsOn: ${{parameters.dependsOn}}
+  condition: ${{parameters.condition}}
+  displayName: 'Deploy Environment - ${{ parameters.environment }}'
+  pool:
+    vmImage: 'ubuntu-latest'
+  variables:          
+    - template: ../variables/${{ parameters.environment }}.yml@Self
+  jobs:
+  - deployment: DeployBicepTemplates
+    displayName: 'Deploy Bicep Templates'
+    environment: 'azure-function-basic-template-${{ parameters.environment }}'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+
+            - download: current
+              artifact: api
+
+            - task: AzureCLI@1
+                inputs:
+                azureSubscription: $(serviceConnection)
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                    az bicep install
+                displayName: 'Install Bicep CLI'
+
+            - task: AzureCLI@1
+                inputs:
+                azureSubscription: $(serviceConnection)
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                    az acr login -n $(containerRegistry)
+                displayName: 'Login to ACR'
+
+            - ${{ each value in parameters.infra }}:
+                - task: AzureCLI@1
+                    inputs:
+                    azureSubscription: $(serviceConnection)
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                        az deployment sub create -f infra/${{ value.path }}/main.bicep -l $(location) --parameters appName=$(appName) appShortName=$(appShortName)
+                    displayName: 'Deploy Infrastructure'
+
+            - task: AzureFunctionApp@1
+                displayName: 'Deploy Azure Function'
+                inputs:
+                azureSubscription: $(serviceConnection)
+                appType: functionAppLinux
+                appName: func-$(appName)
+                package: '$(Pipeline.Workspace)/api/$(buildConfiguration)/BasicHttpFunction.zip'

@@ -4,74 +4,22 @@ trigger:
     include:
       - main
 
+parameters:
+  - name: deploy
+    displayName: Infrastructure to Deploy
+    type: object
+    default:
+      - path: api
+
 variables:
-  appName: azure-function-basic-template
-  appShortName: afbt
-  azureSubscription: PersonalSubscriptionServiceConnection
-  containerRegistry: acrmarcelmichau
-  location: southafricanorth
-  buildConfiguration: release
+  serviceConnection: PersonalSubscriptionServiceConnection
 
 stages:
-  - stage: BuildDeploy
-    displayName: Build + Deploy
-    jobs:
-      - job: BuildDeploy
-        displayName: Build + Deploy
-        pool:
-          vmImage: windows-latest
+  - template: ../templates/stages/build-test.yml@Self
 
-        steps:
-          - task: AzureCLI@1
-            inputs:
-              azureSubscription: $(azureSubscription)
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az bicep install
-            displayName: 'Install Bicep CLI'
-
-          - task: AzureCLI@1
-            inputs:
-              azureSubscription: $(azureSubscription)
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az acr login -n $(containerRegistry)
-            displayName: 'Login to ACR'
-
-          - task: AzureCLI@1
-            inputs:
-              azureSubscription: $(azureSubscription)
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az deployment sub create -f infra/api/main.bicep -l $(location) --parameters appName=$(appName) appShortName=$(appShortName)
-            displayName: 'Deploy Infrastructure'
-
-          - task: DotNetCoreCLI@2
-            displayName: 'Restore project dependencies'
-            inputs:
-              command: 'restore'
-              projects: '**/*.csproj'
-
-          - task: DotNetCoreCLI@2
-            displayName: 'Build the project - $(buildConfiguration)'
-            inputs:
-              command: 'build'
-              arguments: '--no-restore --configuration $(buildConfiguration)'
-              projects: '**/*.csproj'
-
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish the project - $(buildConfiguration)'
-            inputs:
-              command: 'publish'
-              projects: '**/*.csproj'
-              publishWebProjects: false
-              arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
-              zipAfterPublish: true
-
-          - task: AzureFunctionApp@1
-            displayName: 'Deploy Azure Function'
-            inputs:
-              azureSubscription: $(azureSubscription)
-              appType: functionAppLinux
-              appName: func-$(appName)
-              package: '$(Build.ArtifactStagingDirectory)/$(buildConfiguration)/BasicHttpFunction.zip'
+  - template: ../templates/stages/deploy.yml@Self
+    parameters:
+      stage: Deploy_dev
+      environment: dev
+      serviceConnection: ${{ variables.serviceConnection }}
+      infra: ${{ parameters.deploy }}

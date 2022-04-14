@@ -1,0 +1,5 @@
+variables:
+  appName: azure-function-basic-template
+  appShortName: afbt
+  containerRegistry: acrmarcelmichau
+  location: southafricanorth
